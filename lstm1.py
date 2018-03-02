@@ -31,12 +31,6 @@ def coint_path(N,delta,sigma,PO):
 #create artificial cointegrated series
 X,Y = coint_path(60,0.9,0.1,0)
 
-#This is what the two series look like. Please note Y in this case does not mean it is a target value.
-plt.plot(np.array(Y),label='Y')
-plt.plot(np.array(X),label='X')
-plt.legend()
-plt.show();
-
 # We need to ‘stack’ the two series together into a multidimensional array. 
 #We then normalise the newly created multidimensional array using sklearn’s MinMaxScaler function. 
 #This transforms the values to become between -1 and 1.
@@ -50,10 +44,6 @@ return data
 #format features for the model into a multidimensional array
 data = prep_feature_data(X,Y)
 
-#This is what the feature data looks like now, as a multidimensional array.
-print(data[0:3])
-print(data.shape)
-
 def window_stop(data,LOOKBACK_WINDOW,PREDICT_WINDOW):
 examples = LOOKBACK_WINDOW
 y_examples = PREDICT_WINDOW
@@ -64,9 +54,6 @@ return nb_samples
 #ensure it can be divided into the lookback window/batch size
 nb_samples = window_stop(data,LOOKBACK_WINDOW,PREDICT_WINDOW)
 
-print(nb_samples)
-
-
 def input_features(nb_samples,LOOKBACK_WINDOW):
     input_list = [np.expand_dims(data[i:LOOKBACK_WINDOW+i,:], axis=0) for i in range(nb_samples)] #here nb_samples comes in handy
     input_mat = np.concatenate(input_list, axis=0)
@@ -75,10 +62,6 @@ return input_mat
 
 #format the features into the batch size
 input_mat = input_features(nb_samples,LOOKBACK_WINDOW)
-
-print(input_mat[0:2]) #the second sample of features will become the first sample in the next window
-print(input_mat.shape)
-
 
 #Now, we create our target values. In this example, we want to train the LSTM model to predict the intercept of the linear regression line, 
 #based on the slope (beta) between the two features.
@@ -136,36 +119,6 @@ def basic_LSTM_model(BATCH_SIZE,HIDDEN,LOOKBACK_WINDOW,DROPOUT,OPTIMIZER,EPOCHS,
     return model,history,predictions,actuals,scores
 
 
-#We can evaluate the model by plotting the test score losses (these are based on mean squared error, as specified in model.compile), 
-#the training losses over each batch (this has been saved using the keras callback in model.fit), and by visually comparing the actual and predicted values against each other.
-def evaluate_walk_forward_LSTM(model,history,predictions,actuals,scores):
-    print(np.mean(scores[int(len(scores)*0.75):])) #since the latter predictions have been trained on more data, we take the average of the testing loss scores for the last quarter of predictions
-
-    plt.figure(1)
-    plt.plot(history.losses)
-    plt.title('Loss History')
-    plt.figure(2)
-    plt.plot(scores)
-    plt.title('Testing Loss')
-    plt.figure(3)
-    plt.plot(actuals,'b-',label='actual')
-    plt.plot(predictions,'g-',label='prediction')
-    plt.title('Basic LSTM')
-    plt.legend()
-    plt.grid('on')
-    plt.show()
-    
-    LOOKBACK_WINDOW = 15
-    PREDICT_WINDOW = 1
-    BATCH_SIZE = 1 #e.g if 3, then trains with 3 samples/lookback windows, each with 15 timesteps and 2 features at once.
-    HIDDEN = 32
-    DROPOUT = 0.3
-    OPTIMIZER = 'adam'
-    EPOCHS = 3
-    
-    model,history,predictions,actuals,scores = basic_LSTM_model(BATCH_SIZE,HIDDEN,LOOKBACK_WINDOW,DROPOUT,OPTIMIZER,EPOCHS,input_mat,targets)
-    evaluate_walk_forward_LSTM(model,history,predictions,actuals,scores)
-    
     
     
     
